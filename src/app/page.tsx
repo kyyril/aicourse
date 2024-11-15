@@ -1,25 +1,9 @@
-import { signIn, auth } from "@/config/auth";
+import SignInGoogle from "@/components/SignGoogle";
+import { Button } from "@/components/ui/button";
+import { auth, signIn } from "@/config/auth";
 
-export default async function SignIn() {
+export default async function Home() {
   const session = await auth();
   console.log(session?.user);
-  if (!session)
-    return (
-      <div>
-        <form
-          action={async () => {
-            "use server";
-            await signIn("google");
-          }}
-        >
-          <button type="submit">Signin with Google</button>
-        </form>
-      </div>
-    );
-
-  return (
-    <div>
-      <img src={session.user.image} alt="User Avatar" />
-    </div>
-  );
+  return <SignInGoogle />;
 }
