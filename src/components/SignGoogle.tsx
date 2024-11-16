@@ -1,7 +1,8 @@
 import { signIn } from "@/config/auth";
 import { Button } from "./ui/button";
 
-export default function SignInGoogle() {
+type Props = {};
+const SignInGoogle = ({}: Props) => {
   return (
     <form
       action={async () => {
@@ -12,4 +13,6 @@ export default function SignInGoogle() {
       <Button type="submit">signIn</Button>
     </form>
   );
-}
+};
+
+export default SignInGoogle;
