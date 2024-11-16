@@ -77,3 +77,47 @@ model Authenticator {
  
   @@id([userId, credentialID])
 }
+
+
+//course contains many topics
+model Course {
+  id            String          @id @default(cuid())
+  name          String
+  image         String?
+  topics        Topic[]
+}
+
+//topics contains many chapters
+model Topic {
+  id            String          @id @default(cuid())
+  courseId       String
+  name          String
+
+  chapters       Chapter[]
+  course Course @relation(fields: [courseId], references: [id])
+  @@index([courseId], name:"courseId")
+}
+
+model Chapter {
+  id            String          @id @default(cuid())
+  topicId       String
+  name          String
+  youtubeSearchQ String
+  videoId String?
+  summary String? @db.VarChar(3000)
+
+  questions Question[]
+  topic Topic @relation(fields: [topicId], references: [id])
+  @@index([topicId], name:"topicId")
+}
+
+model Question {
+  id            String          @id @default(cuid())
+  chapterId       String
+  question       String @db.VarChar(3000)
+  options        String @db.VarChar(3000)
+  answer         String @db.VarChar(3000)
+  
+  chapter Chapter @relation(fields: [chapterId], references: [id])
+@@index([chapterId], name:"chapterId")
+}

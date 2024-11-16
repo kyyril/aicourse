@@ -117,6 +117,9 @@ const CreateCourse = (props: Props) => {
               </Button>
             </div>
           </div>
+          <Button type="submit" className="w-full mt-6">
+            Submit
+          </Button>
         </form>
       </Form>
     </div>
