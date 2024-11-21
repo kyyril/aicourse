@@ -23,7 +23,8 @@ export async function POST(req: Request) {
 
     const promptTopics = `
       You are tasked to create a course titled "${title}". 
-      The course consists of several topics: ${topics.join(", ")}. 
+      The course consists of several topics: ${topics.join(", ")}.
+      if there is no topic then create a topic automatically which is 3 topics only.
       For each topic, generate the following:
       1. A brief description of the topic.
       2. Generate 3 chapters related to the topic. 
