@@ -10,12 +10,12 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { title, topics } = createChaptersSchema.parse(body);
 
-    // Output types
+    // Tipe untuk data output dari prompt
     type OutputTopicsType = {
       title: string;
       chapters: {
-        name: string; // Matches the Prisma `Chapter` model field
-        youtubeSearchQuery: string; // Matches the Prisma `Chapter` model field
+        name: string;
+        youtubeSearchQuery: string;
       }[];
     };
 
@@ -52,11 +52,14 @@ export async function POST(req: Request) {
     `;
 
     // Generate course topics and image
-    const outputTopics: OutputTopicsType[] = await strict_output(
+    const outputTopics = (await strict_output(
       promptTopics,
       formatTopic
-    );
-    const outputImageTerm = await strict_output(promptImage, formatImage);
+    )) as OutputTopicsType[];
+    const outputImageTerm = (await strict_output(
+      promptImage,
+      formatImage
+    )) as any;
 
     const courseImage = await getUnsplashImage(
       outputImageTerm.image_search_term
