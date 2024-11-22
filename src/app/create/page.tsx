@@ -11,7 +11,7 @@ const CreatePage = async (props: Props) => {
     return redirect("/");
   }
   return (
-    <div className="flex flex-col items-start max-w-xl px-8 mx-auto my-10">
+    <div className="flex flex-col items-start max-w-xl px-8 mx-auto my-10 min-h-screen">
       <h1 className="self-center text-3xl font-bold text-center sm:text-xl">
         Create Course
       </h1>
