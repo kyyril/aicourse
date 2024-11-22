@@ -9,11 +9,26 @@ import { Input } from "./ui/input";
 import { Separator } from "./ui/separator";
 import { Button } from "./ui/button";
 import { ListPlus, TrashIcon } from "lucide-react";
-import { motion, AnimatePresence, animate } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useMutation } from "@tanstack/react-query";
+import axios from "axios";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 type Props = {};
 type Inputtype = z.infer<typeof createChaptersSchema>;
 const CreateCourse = (props: Props) => {
+  const router = useRouter();
+  const { toast } = useToast();
+  const { mutate: createChapters, isLoading } = useMutation({
+    mutationFn: async ({ title, topics }: Inputtype) => {
+      const response = await axios.post("/api/course/createChapters", {
+        title,
+        topics,
+      });
+      return response.data;
+    },
+  });
   const form = useForm<Inputtype>({
     resolver: zodResolver(createChaptersSchema),
     defaultValues: {
@@ -22,7 +37,32 @@ const CreateCourse = (props: Props) => {
     },
   });
 
-  function onsubmit(data: Inputtype) {}
+  function onsubmit(data: Inputtype) {
+    if (data.topics.some((topic) => topic === "")) {
+      toast({
+        title: "Error",
+        description: "Please fill in all topics",
+        variant: "destructive",
+      });
+    }
+    createChapters(data, {
+      onSuccess: ({ courseId }) => {
+        toast({
+          title: "Success",
+          description: "Course has been created successfully",
+        });
+        router.push(`/create/${courseId}`);
+      },
+      onError: (error) => {
+        console.error(error);
+        toast({
+          title: "Error",
+          description: "Failed to create course",
+          variant: "destructive",
+        });
+      },
+    });
+  }
 
   console.log(form.watch());
 
@@ -117,7 +157,7 @@ const CreateCourse = (props: Props) => {
               </Button>
             </div>
           </div>
-          <Button type="submit" className="w-full mt-6">
+          <Button disabled={isLoading} type="submit" className="w-full mt-6">
             Submit
           </Button>
         </form>

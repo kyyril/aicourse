@@ -3,6 +3,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Navigation from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
   title: "CourseAI",
@@ -25,6 +26,7 @@ export default function RootLayout({
         >
           <Navigation />
           {children}
+          <Toaster />
           <Footer />
         </ThemeProvider>
       </body>

@@ -10,15 +10,6 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { title, topics } = createChaptersSchema.parse(body);
 
-    // Tipe untuk data output dari prompt
-    type OutputTopicsType = {
-      title: string;
-      chapters: {
-        name: string;
-        youtubeSearchQuery: string;
-      }[];
-    };
-
     const formatTopic = [
       {
         title: "Topic Title",
@@ -48,18 +39,11 @@ export async function POST(req: Request) {
       Provide a simple image search term for the course titled "${title}".
       This search term will be used with the Unsplash API.
       Output should be a JSON object like this:
-      [{ "image_search_term": "Relevant image search term" }]
     `;
 
     // Generate course topics and image
-    const outputTopics = (await strict_output(
-      promptTopics,
-      formatTopic
-    )) as OutputTopicsType[];
-    const outputImageTerm = (await strict_output(
-      promptImage,
-      formatImage
-    )) as any;
+    const outputTopics: any = await strict_output(promptTopics, formatTopic);
+    const outputImageTerm: any = await strict_output(promptImage, formatImage);
 
     const courseImage = await getUnsplashImage(
       outputImageTerm.image_search_term
@@ -83,7 +67,7 @@ export async function POST(req: Request) {
       });
 
       await prisma.chapter.createMany({
-        data: topic.chapters.map((chapter) => ({
+        data: topic.chapters.map((chapter: any) => ({
           name: chapter.name,
           youtubeSearchQuery: chapter.youtubeSearchQuery,
           topicId: prismaTopic.id,
@@ -94,6 +78,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       courseId: course.id,
       outputTopics,
+      outputImageTerm,
       courseImage,
     });
   } catch (error) {
