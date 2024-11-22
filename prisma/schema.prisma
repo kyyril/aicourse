@@ -102,7 +102,7 @@ model Chapter {
   id            String          @id @default(cuid())
   topicId       String
   name          String
-  youtubeSearchQ String
+  youtubeSearchQuery String
   videoId String?
   summary String? @db.VarChar(3000)
 

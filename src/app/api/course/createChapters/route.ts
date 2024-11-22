@@ -1,4 +1,6 @@
+import { prisma } from "@/config/prisma";
 import { strict_output } from "@/lib/aimodel/gemini";
+import { getUnsplashImage } from "@/lib/unplash";
 import { createChaptersSchema } from "@/validators/course";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
@@ -8,39 +10,89 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { title, topics } = createChaptersSchema.parse(body);
 
+    // Output types
+    type OutputTopicsType = {
+      title: string;
+      chapters: {
+        name: string; // Matches the Prisma `Chapter` model field
+        youtubeSearchQuery: string; // Matches the Prisma `Chapter` model field
+      }[];
+    };
+
     const formatTopic = [
       {
-        title: "Title of the topics",
+        title: "Topic Title",
         chapters: [
           {
-            chapter_title: "Title of the chapter",
-            youtube_search_query: "Search query for relevant YouTube",
+            name: "Chapter Title",
+            youtubeSearchQuery: "Search query for relevant YouTube content",
           },
         ],
       },
     ];
-    const formatImage = { image_search_term: "good relevant image" };
+    const formatImage = [{ image_search_term: "Relevant image search term" }];
 
     const promptTopics = `
       You are tasked to create a course titled "${title}". 
       The course consists of several topics: ${topics.join(", ")}.
-      if there is no topic then create a topic automatically which is 3 topics only.
+      If no topics are provided, create 3 default topics automatically.
       For each topic, generate the following:
-      1. A brief description of the topic.
-      2. Generate 3 chapters related to the topic. 
-         Each chapter should have:
-           - A title.
-           - A detailed YouTube search query to find relevant educational content.
+      - A title.
+      - 1 chapter related to the topic.
+      Each chapter should include:
+      - A name (title of the chapter).
+      - A detailed YouTube search query to find relevant educational content.
     `;
-    const promptImage = ` provide simple image search term for the title of a course about ${title}. 
-    This search will be fed into the Unsplash API. The output should be a JSON object with the following structure:;`;
 
-    // Generate course content
-    const outputTopics = await strict_output(promptTopics, formatTopic);
+    const promptImage = `
+      Provide a simple image search term for the course titled "${title}".
+      This search term will be used with the Unsplash API.
+      Output should be a JSON object like this:
+      [{ "image_search_term": "Relevant image search term" }]
+    `;
 
-    const output_Image = await strict_output(promptImage, formatImage);
+    // Generate course topics and image
+    const outputTopics: OutputTopicsType[] = await strict_output(
+      promptTopics,
+      formatTopic
+    );
+    const outputImageTerm = await strict_output(promptImage, formatImage);
 
-    return NextResponse.json({ outputTopics, output_Image });
+    const courseImage = await getUnsplashImage(
+      outputImageTerm.image_search_term
+    );
+
+    // Create course in the database
+    const course = await prisma.course.create({
+      data: {
+        name: title,
+        image: courseImage,
+      },
+    });
+
+    // Create topics and chapters
+    for (const topic of outputTopics) {
+      const prismaTopic = await prisma.topic.create({
+        data: {
+          name: topic.title,
+          courseId: course.id,
+        },
+      });
+
+      await prisma.chapter.createMany({
+        data: topic.chapters.map((chapter) => ({
+          name: chapter.name,
+          youtubeSearchQuery: chapter.youtubeSearchQuery,
+          topicId: prismaTopic.id,
+        })),
+      });
+    }
+
+    return NextResponse.json({
+      courseId: course.id,
+      outputTopics,
+      courseImage,
+    });
   } catch (error) {
     if (error instanceof ZodError) {
       return NextResponse.json(
