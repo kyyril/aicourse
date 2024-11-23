@@ -34,10 +34,8 @@ const createChapters = async ({ params: { courseId } }: Props) => {
   }
   return (
     <div className="flex flex-col items-start max-w-xl mx-auto my-16 min-h-screen">
-      <h4 className="text-sm uppercase text-secondary-foreground">
-        Course Name
-      </h4>
-      <h1 className="text-5xl font-semibold">{course.name}</h1>
+      <h4 className="text-sm text-secondary-foreground/60">Course Name</h4>
+      <h1 className="text-5xl font-semibold uppercase">{course.name}</h1>
       <div className="flex p-3 mt-5 border-none bg-secondary rounded-md">
         <InfoIcon className="w-6 h-6 m-3" />
         <p>
@@ -45,9 +43,8 @@ const createChapters = async ({ params: { courseId } }: Props) => {
           it for you. If not, you can cancel and make changes.
         </p>
       </div>
-      <div>
-        <ConfirmCreateCourse course={course} />
-      </div>
+
+      <ConfirmCreateCourse course={course} />
     </div>
   );
 };
