@@ -1,7 +1,7 @@
 "use client";
 import { Chapter, Course, Topic } from "@prisma/client";
 import React from "react";
-import CardChapters from "./CardChapters";
+import CardChapters, { ChapterCardHandler } from "./CardChapters";
 import { Separator } from "./ui/separator";
 import Link from "next/link";
 import { Button, buttonVariants } from "./ui/button";
@@ -16,6 +16,13 @@ type Props = {
 };
 
 const ConfirmCreateCourse = ({ course }: Props) => {
+  const chapterRef: Record<string, React.RefObject<ChapterCardHandler>> = {};
+  course.topics.forEach((topic) => {
+    topic.chapters.forEach((chapter) => {
+      chapterRef[chapter.id] = React.useRef(null);
+    });
+  });
+  console.log(chapterRef);
   return (
     <div className="w-full mt-4">
       {course.topics.map((topic, topicIndex) => {
@@ -28,7 +35,11 @@ const ConfirmCreateCourse = ({ course }: Props) => {
             <div className="mt-2">
               {topic.chapters.map((chapter, chapterIndex) => {
                 return (
-                  <CardChapters chapter={chapter} chapterIndex={chapterIndex} />
+                  <CardChapters
+                    ref={chapterRef[chapter.id]}
+                    chapter={chapter}
+                    chapterIndex={chapterIndex}
+                  />
                 );
               })}
             </div>
@@ -48,7 +59,14 @@ const ConfirmCreateCourse = ({ course }: Props) => {
             <ArrowLeftIcon className="w-4 h-4" />
             Back
           </Link>
-          <Button type="button" onClick={() => {}}>
+          <Button
+            type="button"
+            onClick={() => {
+              Object.values(chapterRef).forEach((ref) => {
+                ref.current?.triggerLoad();
+              });
+            }}
+          >
             Generate
             <ArrowRightIcon className="w-4 h-4" />
           </Button>
