@@ -40,18 +40,22 @@ export async function getQuestionFromTranscript(
   transcript: string,
   course_title: string
 ) {
-  const formatQuestion = {
+  type Question = {
+    question: string;
+    answer: string;
+    option1: string;
+    option2: string;
+    option3: string;
+  };
+  const promptQuestion: any = new Array(5)
+    .fill(`you are a helpul AI that is able to generate mcq questions and answer, the length of each answer should not be more than 15 word.
+you are to generate a random hard mcq question about ${course_title}, with context of the following transcript: ${transcript}`);
+  const ouputQuestion: Question[] = await strict_output(promptQuestion, {
     question: "question",
     answer: "answer with max length of 15 words",
     option1: "option 1",
     option2: "option 2",
     option3: "option 3",
-  };
-  const promtGetQuestion = `you are a helpul AI that is able to generate mcq questions and answer, the length of each answer should not be more than 15 word.
-  you are to generate a random hard mcq question about ${course_title}, with context of the following transcript: ${transcript}`;
-  const ouputQuestion: any = await strict_output(
-    promtGetQuestion,
-    formatQuestion
-  );
+  });
   return ouputQuestion;
 }

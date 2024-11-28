@@ -5,6 +5,7 @@ import {
   getTranscript,
   searchYouTube,
 } from "@/lib/youtubeapi";
+
 import { NextResponse } from "next/server";
 import z from "zod";
 
@@ -28,18 +29,50 @@ export async function POST(req: Request, res: Response) {
     }
     const videoId = await searchYouTube(chapter.youtubeSearchQuery);
     let transcript = await getTranscript(videoId);
-    let maxLength = 500;
+    let maxLength = 250;
     transcript = transcript.split(" ").slice(0, maxLength).join(" ");
-    const formatSummary = { summary: "summary of the transcript" };
-    const promptSummary: string =
-      `you are ai capable of summarising a youtube transcript, summarise in 250 word or less and do not talk of the sponsors or anything unrelated to the main topic, also do not introduce what the summary is about.\n` +
-      transcript;
-    const outputSummary: any = await strict_output(
-      promptSummary,
-      formatSummary
+
+    const { summary }: { summary: string } = await strict_output(
+      `you are ai capable of summarising a youtube transcript, summarise in 250 word or less and do not talk of the sponsors or anything unrelated to the main topic, also do not introduce what the summary is about. and follow format: { summary: "summary of the transcript" }.\n` +
+        transcript,
+      { summary: "summary of the transcript" }
     );
-    const question = await getQuestionFromTranscript(transcript, chapter.name);
-    return NextResponse.json({ videoId, transcript, outputSummary, question });
+
+    const questions = await getQuestionFromTranscript(transcript, chapter.name);
+
+    await prisma.question.createMany({
+      data: questions.map((question: any) => {
+        let options = [
+          question.answer,
+          question.option1,
+          question.option2,
+          question.option3,
+        ];
+        options = options.sort(() => Math.random() - 0.5);
+        return {
+          question: question.question,
+          answer: question.answer,
+          options: JSON.stringify(options),
+          chapterId: chapterId,
+        };
+      }),
+    });
+
+    await prisma.chapter.update({
+      where: { id: chapterId },
+      data: {
+        videoId: videoId,
+        summary: summary,
+      },
+    });
+
+    return NextResponse.json({
+      // chapterId: chapter.id,
+      success: true,
+      videoId,
+      summary,
+      questions,
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

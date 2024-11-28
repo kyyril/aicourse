@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     ];
     const formatImage = [{ image_search_term: "Relevant image search term" }];
 
-    const promptTopics = `
+    const promptTopics: any = new Array(topics.length).fill(`
       You are tasked to create a course titled "${title}". 
       The course consists of several topics: ${topics.join(", ")}.
       If no topics are provided, create 3 default topics automatically.
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
       Each chapter should include:
       - A name (title of the chapter).
       - A detailed YouTube search query to find relevant educational content.
-    `;
+    `);
 
     const promptImage = `
       Provide a simple image search term for the course titled "${title}".

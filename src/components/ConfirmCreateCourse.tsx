@@ -16,13 +16,21 @@ type Props = {
 };
 
 const ConfirmCreateCourse = ({ course }: Props) => {
+  const [loading, setLoading] = React.useState(false);
   const chapterRef: Record<string, React.RefObject<ChapterCardHandler>> = {};
   course.topics.forEach((topic) => {
     topic.chapters.forEach((chapter) => {
       chapterRef[chapter.id] = React.useRef(null);
     });
   });
-  console.log(chapterRef);
+  const [completedChapters, setCompletedChapters] = React.useState<Set<string>>(
+    new Set()
+  );
+  const totalChaptersCount = React.useMemo(() => {
+    return course.topics.reduce((acc, topic) => {
+      return acc + topic.chapters.length;
+    }, 0);
+  }, [course.topics]);
   return (
     <div className="w-full mt-4">
       {course.topics.map((topic, topicIndex) => {
@@ -39,6 +47,7 @@ const ConfirmCreateCourse = ({ course }: Props) => {
                     ref={chapterRef[chapter.id]}
                     chapter={chapter}
                     chapterIndex={chapterIndex}
+                    completedChapters={completedChapters}
                   />
                 );
               })}
@@ -59,17 +68,31 @@ const ConfirmCreateCourse = ({ course }: Props) => {
             <ArrowLeftIcon className="w-4 h-4" />
             Back
           </Link>
-          <Button
-            type="button"
-            onClick={() => {
-              Object.values(chapterRef).forEach((ref) => {
-                ref.current?.triggerLoad();
-              });
-            }}
-          >
-            Generate
-            <ArrowRightIcon className="w-4 h-4" />
-          </Button>
+          {totalChaptersCount === completedChapters.size ? (
+            <Link
+              href={"/"}
+              className={buttonVariants({
+                className: "ml-4 font-semibold",
+              })}
+            >
+              save & continue
+              <ArrowRightIcon className="w-4 h-4 ml-2" />
+            </Link>
+          ) : (
+            <Button
+              type="button"
+              disabled={loading}
+              onClick={() => {
+                setLoading(true);
+                Object.values(chapterRef).forEach((ref) => {
+                  ref.current?.triggerLoad();
+                });
+              }}
+            >
+              Generate
+              <ArrowRightIcon className="w-4 h-4" />
+            </Button>
+          )}
         </div>
         <Separator className="flex-[1]" />
       </div>
